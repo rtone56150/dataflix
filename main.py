@@ -6,6 +6,11 @@ from back_end.recommender import liste_films_possibles, find_neighbors_by_title
 app = FastAPI()
 
 
-@app.get("/search/")
+@app.get("/search")
 def suggest(name: str):
     return liste_films_possibles(name)
+
+
+@app.get("/recommend")
+def recommend(choix: str):
+    return find_neighbors_by_title(choix).to_dict()
