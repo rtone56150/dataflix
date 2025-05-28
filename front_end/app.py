@@ -88,10 +88,13 @@ if recherche:
     st.write("Vous recherchez :", recherche)
     response = requests.get(f"{url_search}?name={recherche}")
     suggestions = response.json()
+    df_films_possibles = pd.DataFrame(suggestions)
+    liste_films_possibles = df_films_possibles["originalTitle"]
+    st.dataframe(df_films_possibles)
 
     choix = st.selectbox(
         "Suggestions :",
-        suggestions
+        liste_films_possibles
         )
 
     if choix:

@@ -32,8 +32,24 @@ def liste_films_possibles(film_recherche: str):
 def liste_films_possibles_knarf(film_recherche: str):
     film_recherche_normalise = normalize(film_recherche)
     df_ml["originalTitle_normalise"] = df_ml["originalTitle"].apply(normalize)
-    df_film_possible = df_ml[df_ml['originalTitle_normalise'].str.contains(film_recherche_normalise)]
-    return df_film_possible["originalTitle"].to_list()
+    df_film_possible = df_ml[df_ml['originalTitle_normalise'].str.contains(film_recherche_normalise, case=False, na=False)]
+    df_film_possible.dropna(subset=[
+        "originalTitle",
+        "startYear",
+        "genres_x",
+        "averageRating",
+        "numVotes",
+        "runtime",
+        "popularity"], inplace=True)
+    return df_film_possible[[
+        "originalTitle",
+        "startYear",
+        "genres_x",
+        "averageRating",
+        "numVotes",
+        "runtime",
+        "popularity"
+        ]].sort_values("numVotes", ascending=False).to_dict()
 
 
 # Définition des features
