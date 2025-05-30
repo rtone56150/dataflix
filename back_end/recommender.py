@@ -14,7 +14,7 @@ def normalize(text):
     text = unidecode.unidecode(text)        # Supprime les accents
     text = text.lower()                     # Met en minuscules
     text = re.sub(r'\s+', ' ', text)        # Supprime les espaces multiples
-    text = re.sub(r'[^\w\s]', ' ', text)    # Remplace la ponctuation par un espace
+    text = re.sub(r'[^\w\s]', ' ', text)    # Remplace ponctuation par espace
     text = text.strip()
     return text
 
@@ -35,25 +35,31 @@ def liste_films_possibles_knarf(film_recherche: str):
     df_film_possible = df_ml[df_ml['originalTitle_normalise'].str.contains(film_recherche_normalise, case=False, na=False)]
     df_film_possible.dropna(subset=[
         "originalTitle",
+        "originalTitle_year",
         "startYear",
         "genres_x",
         "averageRating",
         "numVotes",
         "runtime",
-        "popularity"], inplace=True)
+        "popularity",
+        "overview",
+        "poster_path"], inplace=True)
     return df_film_possible[[
         "originalTitle",
+        "originalTitle_year",
         "startYear",
         "genres_x",
         "averageRating",
         "numVotes",
         "runtime",
-        "popularity"
+        "popularity",
+        "overview",
+        "poster_path"
         ]].sort_values("numVotes", ascending=False).to_dict()
 
 
 # Définition des features
-X = df_ml.drop(columns=["Unnamed: 0", "index", "tconst", "originalTitle", "genres_x", "numVotes", "poster_path"])
+X = df_ml.drop(columns=["Unnamed: 0", "index", "tconst", "originalTitle", "genres_x", "numVotes", "poster_path", "overview", "originalTitle_year"])
 
 # Standardisation des features
 scaler_knn = StandardScaler()
@@ -84,7 +90,7 @@ def find_neighbors_by_title(movie_title: str):
     distances, indices = nn_model.kneighbors(movie_features_scaled, n_neighbors=6)
 
     # Passage en dimension 1
-    indices = indices[0]
+    indices = indices[0][1:]
 
     # Récupérer les index originaux des voisins trouvés dans le DF original
     neighbor_original_indices = X.iloc[indices].index

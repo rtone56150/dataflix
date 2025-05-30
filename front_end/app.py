@@ -7,8 +7,10 @@ import pandas as pd
 st.markdown("""
 <style>
 .stApp {
-    background-color: black;
-    color: white;
+    background-color: black !important;
+    background-image: none !important;
+    color: white !important;
+    min-height: 100vh;
 }
 .stApp * {
     color: white !important;
@@ -47,10 +49,6 @@ div[data-baseweb="select"] > div {
     border-radius: 5px;
     border: 1px solid #e50914;
 }
-div[data-baseweb="select"] div[role="option"] {
-    background-color: black;
-    color: white;
-}
 
 /* Text input */
 div[data-baseweb="input"] {
@@ -66,10 +64,12 @@ input {
     border: none !important;
     padding: 0.5em 0.25em;
 }
-
-input:focus {
-    outline: none !important;
-    box-shadow: 0 0 0 2px #e50914;
+input::placeholder {
+    color: white !important;  /* changer la couleur du texte placeholder */
+    opacity: 1 !important;   /* forcer l’opacité */
+}
+ section[data-testid="stSidebar"] {
+            background-color: #1e1e1e;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -89,16 +89,27 @@ if recherche:
     response = requests.get(f"{url_search}?name={recherche}")
     suggestions = response.json()
     df_films_possibles = pd.DataFrame(suggestions)
-    liste_films_possibles = df_films_possibles["originalTitle"]
+    liste_films_possibles_avec_annee = df_films_possibles["originalTitle_year"]
     st.dataframe(df_films_possibles)
 
-    choix = st.selectbox(
+    choix_film_avec_annee = st.selectbox(
         "Suggestions :",
-        liste_films_possibles
+        liste_films_possibles_avec_annee
         )
 
+    choix = df_films_possibles[df_films_possibles["originalTitle_year"] == choix_film_avec_annee]["originalTitle"].values[0]
+
     if choix:
-        st.write("Vous avez choisi :", choix)
+
+        with st.sidebar:
+            url = f"https://image.tmdb.org/t/p/w500/{df_films_possibles[df_films_possibles['originalTitle'] == choix]["poster_path"].values[0]}"
+            st.subheader(f"Vous avez choisi : {choix}")
+            st.image(url, width=200)
+            genre = df_films_possibles[df_films_possibles['originalTitle'].str.contains(recherche, case=False, na=False)]['genres_x'].values[0].replace(",", " ")
+            st.write(f"Genre(s) : {genre}")
+            synopsis = df_films_possibles[df_films_possibles["originalTitle_year"] == choix_film_avec_annee]["overview"].values[0]
+            st.write(f"Synopsis : {synopsis}")
+
         st.write("Vous pourriez aimer :")
         response_2 = requests.get(f"{url_recommend}?choix={choix}")
         recommandations = response_2.json()

@@ -1,5 +1,8 @@
 from fastapi import FastAPI
-from back_end.recommender import liste_films_possibles, find_neighbors_by_title, liste_films_possibles_knarf
+from back_end.recommender import liste_films_possibles
+from back_end.recommender import liste_films_possibles_knarf
+from back_end.recommender import find_neighbors_by_title
+
 
 # Pour lancer : fastapi dev main.py
 
