@@ -4,9 +4,13 @@ import re
 from sklearn.neighbors import NearestNeighbors
 # Import outil standardisation de la donnée
 from sklearn.preprocessing import StandardScaler
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
 
 # Import le dataframe en CSV
-df_ml = pd.read_csv("df_ml.csv")
+df_nlp = pd.read_csv("df_nlp.csv")
 
 
 # Fonction de normalisation
@@ -24,34 +28,23 @@ def normalize(text):
 
 def liste_films_possibles(film_recherche: str):
     film_recherche_normalise = normalize(film_recherche)
-    df_ml["originalTitle_normalise"] = df_ml["originalTitle"].apply(normalize)
-    df_film_possible = df_ml[df_ml["originalTitle_normalise"].apply(lambda x: set(film_recherche_normalise).issubset(set(x)))]
+    df_nlp["originalTitle_normalise"] = df_nlp["originalTitle"].apply(normalize)
+    df_film_possible = df_nlp[df_nlp["originalTitle_normalise"].apply(lambda x: set(film_recherche_normalise).issubset(set(x)))]
     return df_film_possible["originalTitle"].to_list()
 
 
 def liste_films_possibles_knarf(film_recherche: str):
     film_recherche_normalise = normalize(film_recherche)
-    df_ml["originalTitle_normalise"] = df_ml["originalTitle"].apply(normalize)
-    df_film_possible = df_ml[df_ml['originalTitle_normalise'].str.contains(film_recherche_normalise, case=False, na=False)]
-    df_film_possible.dropna(subset=[
-        "originalTitle",
-        "originalTitle_year",
-        "startYear",
-        "genres_x",
-        "averageRating",
-        "numVotes",
-        "runtime",
-        "popularity",
-        "overview",
-        "poster_path"], inplace=True)
+    df_nlp["originalTitle_normalise"] = df_nlp["originalTitle"].apply(normalize)
+    df_film_possible = df_nlp[df_nlp['originalTitle_normalise'].str.contains(film_recherche_normalise, case=False, na=False)]
+    df_film_possible = df_film_possible.fillna(value="Inconnu")
     return df_film_possible[[
         "originalTitle",
         "originalTitle_year",
         "startYear",
-        "genres_x",
+        "genres",
         "averageRating",
         "numVotes",
-        "runtime",
         "popularity",
         "overview",
         "poster_path"
@@ -59,18 +52,18 @@ def liste_films_possibles_knarf(film_recherche: str):
 
 
 # Définition des features
-X = df_ml.drop(columns=["Unnamed: 0", "index", "tconst", "originalTitle", "genres_x", "numVotes", "poster_path", "overview", "originalTitle_year"])
+#X = df_nlp(columns=["Unnamed: 0", "index", "tconst", "originalTitle", "genres", "numVotes", "nconst", "director", "actor/actress", "poster_path", "overview", "originalTitle_year", "tagline", "texte_nlp_cleaned"])
 
 # Standardisation des features
-scaler_knn = StandardScaler()
-X_scaled = scaler_knn.fit_transform(X)
+#scaler_knn = StandardScaler()
+#X_scaled = scaler_knn.fit_transform(X)
 
 # Entrainement du modèle
-k = 6  # Le nombre de films à recommander (le film choisi étant inclus)
+#k = 6  # Le nombre de films à recommander (le film choisi étant inclus)
 # Donc 5 films recommandés
-nn_model = NearestNeighbors(n_neighbors=k, algorithm='auto', metric='euclidean')
+#nn_model = NearestNeighbors(n_neighbors=k, algorithm='auto', metric='euclidean')
 # .fit() indexe les données X_knn_scaled
-nn_model.fit(X_scaled)  # Entraîner sur les données standardisées X_class
+#nn_model.fit(X_scaled)  # Entraîner sur les données standardisées X_class
 
 # Fonction recommandation
 
@@ -78,7 +71,7 @@ nn_model.fit(X_scaled)  # Entraîner sur les données standardisées X_class
 def find_neighbors_by_title(movie_title: str):
 
     # Récupérer l'ID du film à partir du titre
-    movie_id = df_ml[df_ml["originalTitle"] == movie_title].index.to_list()[0]
+    movie_id = df_nlp[df_nlp["originalTitle"] == movie_title].index.to_list()[0]
 
     # Récupérer les features du film cible
     movie_features = X.loc[[movie_id]]  # Garder le format DataFrame
@@ -96,7 +89,7 @@ def find_neighbors_by_title(movie_title: str):
     neighbor_original_indices = X.iloc[indices].index
 
     # Utiliser .loc avec la liste des index originaux des voisins
-    neighbor_info = df_ml.loc[neighbor_original_indices]
+    neighbor_info = df_nlp.loc[neighbor_original_indices]
 
     # display(neighbor_info[["originalTitle", "genres_x", "startYear", "averageRating", "numVotes", "runtime", "popularity"]])
     # print("\nDistances euclidiennes correspondantes:")
@@ -108,6 +101,42 @@ def find_neighbors_by_title(movie_title: str):
         "startYear",
         "averageRating",
         "numVotes",
-        "runtime",
+        "popularity"
+    ]].to_dict()
+
+
+X_nlp = df_nlp["texte_nlp_cleaned"]
+
+model_vectorizer = TfidfVectorizer()
+
+X_nlp_CV = model_vectorizer.fit_transform(X_nlp)
+
+
+def find_neighbors_nlp(movie_title:str):
+    # Récupérer l'ID du film à partir du titre
+    movie_id = df_nlp[df_nlp["originalTitle"] == movie_title].index.to_list()[0]
+
+    # Récupérer les features du film cible
+    movie_features = X_nlp_CV[movie_id]  # Garder le format DataFrame
+
+    # Trouver les k voisins (incluant potentiellement lui-même en premier)
+    cosine_sim_scores = cosine_similarity(movie_features, X_nlp_CV)
+
+    # On classe pour récupérer les indices triés par similarité décroissante
+    neighbor_original_indices = np.argsort(cosine_sim_scores[0])[::-1][1:20]
+
+    # Utiliser .loc avec la liste des index originaux des voisins
+    neighbor_info = df_nlp.loc[neighbor_original_indices]
+
+    neighbor_info = neighbor_info.fillna(value="Inconnu")
+
+    return neighbor_info[[
+        "originalTitle",
+        "genres",
+        "startYear",
+        'director',
+        "actor/actress",
+        "averageRating",
+        "numVotes",
         "popularity"
     ]].to_dict()

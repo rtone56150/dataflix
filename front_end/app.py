@@ -105,7 +105,7 @@ if recherche:
             url = f"https://image.tmdb.org/t/p/w500/{df_films_possibles[df_films_possibles['originalTitle'] == choix]["poster_path"].values[0]}"
             st.subheader(f"Vous avez choisi : {choix}")
             st.image(url, width=200)
-            genre = df_films_possibles[df_films_possibles['originalTitle'].str.contains(recherche, case=False, na=False)]['genres_x'].values[0].replace(",", " ")
+            genre = df_films_possibles[df_films_possibles['originalTitle'].str.contains(recherche, case=False, na=False)]['genres'].values[0].replace(",", " ")
             st.write(f"Genre(s) : {genre}")
             synopsis = df_films_possibles[df_films_possibles["originalTitle_year"] == choix_film_avec_annee]["overview"].values[0]
             st.write(f"Synopsis : {synopsis}")
