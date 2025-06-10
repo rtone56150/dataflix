@@ -4,6 +4,12 @@ import pandas as pd
 
 # streamlit run front_end/app.py
 
+# Background - NE PAS OUBLIER DE METTRE L'IMAGE DU BACKGROUND DANS LE MEME DOSSIER
+import base64
+with open("Background.jpg", "rb") as img_file:    # J'ai appelé l'image Background sur mon pc (Transparence de 3 sur Canva)
+    encoded = base64.b64encode(img_file.read()).decode()
+background_img = "data:image/jpeg;base64,{}".format(encoded)
+
 st.markdown("""
 <style>
 .stApp {
@@ -79,18 +85,18 @@ url_recommend = "http://127.0.0.1:8000/recommend"
 
 st.title("Dataflix")
 st.header("Recommandation de films")
-st.subheader("Recherche de films")
+# st.subheader("Recherche de films")
 
 # Champ de texte pour entrer un titre de film
-recherche = st.text_input("Entrez votre film")
+recherche = st.text_input("Recherche de films", placeholder="Entrez votre film")
 
 if recherche:
-    st.write("Vous recherchez :", recherche)
+    # st.write("Vous recherchez :", recherche)
     response = requests.get(f"{url_search}?name={recherche}")
     suggestions = response.json()
     df_films_possibles = pd.DataFrame(suggestions)
     liste_films_possibles_avec_annee = df_films_possibles["originalTitle_year"]
-    st.dataframe(df_films_possibles)
+    # st.dataframe(df_films_possibles)
 
     choix_film_avec_annee = st.selectbox(
         "Suggestions :",
@@ -115,3 +121,15 @@ if recherche:
         recommandations = response_2.json()
         df_recommandations = pd.DataFrame(recommandations)
         st.dataframe(df_recommandations)
+
+        # Feedback
+        st.write('___')
+        st.markdown("Notre recommandation vous a-t-elle été utile ?")
+        st.feedback("stars")
+        st.write('___')
+
+        # Liens utiles
+        st.button('FAQ')
+        st.button("Conditions d'utilisation")
+        st.button('Mention légale')
+        st.button('Nous contacter')

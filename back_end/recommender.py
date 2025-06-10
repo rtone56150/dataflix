@@ -40,6 +40,7 @@ def liste_films_possibles_knarf(film_recherche: str):
     df_film_possible = df_film_possible.fillna(value="Inconnu")
     return df_film_possible[[
         "originalTitle",
+        "tconst",
         "originalTitle_year",
         "startYear",
         "genres",
@@ -123,7 +124,7 @@ def find_neighbors_nlp(movie_title:str):
     cosine_sim_scores = cosine_similarity(movie_features, X_nlp_CV)
 
     # On classe pour récupérer les indices triés par similarité décroissante
-    neighbor_original_indices = np.argsort(cosine_sim_scores[0])[::-1][1:20]
+    neighbor_original_indices = np.argsort(cosine_sim_scores[0])[::-1][1:12]
 
     # Utiliser .loc avec la liste des index originaux des voisins
     neighbor_info = df_nlp.loc[neighbor_original_indices]
@@ -132,6 +133,7 @@ def find_neighbors_nlp(movie_title:str):
 
     return neighbor_info[[
         "originalTitle",
+        "tconst",
         "genres",
         "startYear",
         'director',
@@ -139,4 +141,4 @@ def find_neighbors_nlp(movie_title:str):
         "averageRating",
         "numVotes",
         "popularity"
-    ]].to_dict()
+    ]].sort_values("numVotes", ascending=False).to_dict()
