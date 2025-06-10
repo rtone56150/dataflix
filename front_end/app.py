@@ -116,8 +116,10 @@ if recherche:
             synopsis = df_films_possibles[df_films_possibles["originalTitle_year"] == choix_film_avec_annee]["overview"].values[0]
             st.write(f"Synopsis : {synopsis}")
 
+        choix_tconst = df_films_possibles[df_films_possibles["originalTitle_year"] == choix_film_avec_annee]["tconst"].values[0]
+
         st.write("Vous pourriez aimer :")
-        response_2 = requests.get(f"{url_recommend}?choix={choix}")
+        response_2 = requests.get(f"{url_recommend}?tconst={choix_tconst}")
         recommandations = response_2.json()
         df_recommandations = pd.DataFrame(recommandations)
         st.dataframe(df_recommandations)

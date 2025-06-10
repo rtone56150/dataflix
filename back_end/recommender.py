@@ -113,9 +113,9 @@ model_vectorizer = TfidfVectorizer()
 X_nlp_CV = model_vectorizer.fit_transform(X_nlp)
 
 
-def find_neighbors_nlp(movie_title:str):
-    # Récupérer l'ID du film à partir du titre
-    movie_id = df_nlp[df_nlp["originalTitle"] == movie_title].index.to_list()[0]
+def find_neighbors_nlp(movie_tconst:str):
+    # Récupérer l'ID du film à partir du tconst
+    movie_id = df_nlp[df_nlp["tconst"] == movie_tconst].index.to_list()[0]
 
     # Récupérer les features du film cible
     movie_features = X_nlp_CV[movie_id]  # Garder le format DataFrame

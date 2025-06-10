@@ -16,5 +16,5 @@ def suggest(name: str):
 
 
 @app.get("/recommend")
-def recommend(choix: str):
-    return find_neighbors_nlp(choix)
+def recommend(tconst: str):
+    return find_neighbors_nlp(tconst)
