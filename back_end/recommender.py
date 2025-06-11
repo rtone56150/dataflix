@@ -140,5 +140,7 @@ def find_neighbors_nlp(movie_tconst:str):
         "actor/actress",
         "averageRating",
         "numVotes",
-        "popularity"
+        "popularity",
+        "poster_path",
+        "originalTitle_year"
     ]].sort_values("numVotes", ascending=False).to_dict()

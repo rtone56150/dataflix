@@ -13,9 +13,10 @@ background_img = "data:image/jpeg;base64,{}".format(encoded)
 st.markdown("""
 <style>
 .stApp {
-    background-color: black !important;
-    background-image: none !important;
-    color: white !important;
+    background-image: url('""" + background_img + """');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     min-height: 100vh;
 }
 .stApp * {
@@ -44,9 +45,11 @@ st.markdown("""
     padding: 0.5em 1.2em;
     cursor: pointer;
 }
+
 .stButton>button:hover {
     background-color: #b20710 !important;
 }
+            
 
 /* Selectbox */
 div[data-baseweb="select"] > div {
@@ -84,11 +87,11 @@ url_search = "http://127.0.0.1:8000/search"
 url_recommend = "http://127.0.0.1:8000/recommend"
 
 st.title("Dataflix")
-st.header("Recommandation de films")
+st.subheader("Recommandation de films")
 # st.subheader("Recherche de films")
 
 # Champ de texte pour entrer un titre de film
-recherche = st.text_input("Recherche de films", placeholder="Entrez votre film")
+recherche = st.text_input(" ", placeholder="Recherchez votre film")
 
 if recherche:
     # st.write("Vous recherchez :", recherche)
@@ -99,13 +102,16 @@ if recherche:
     # st.dataframe(df_films_possibles)
 
     choix_film_avec_annee = st.selectbox(
-        "Suggestions :",
-        liste_films_possibles_avec_annee
+        "Selectionnez votre film :",
+        liste_films_possibles_avec_annee,
+        index = None
         )
 
-    choix = df_films_possibles[df_films_possibles["originalTitle_year"] == choix_film_avec_annee]["originalTitle"].values[0]
+    
 
-    if choix:
+    if choix_film_avec_annee:
+
+        choix = df_films_possibles[df_films_possibles["originalTitle_year"] == choix_film_avec_annee]["originalTitle"].values[0]
 
         with st.sidebar:
             url = f"https://image.tmdb.org/t/p/w500/{df_films_possibles[df_films_possibles['originalTitle'] == choix]["poster_path"].values[0]}"
@@ -121,8 +127,26 @@ if recherche:
         st.write("Vous pourriez aimer :")
         response_2 = requests.get(f"{url_recommend}?tconst={choix_tconst}")
         recommandations = response_2.json()
-        df_recommandations = pd.DataFrame(recommandations)
-        st.dataframe(df_recommandations)
+        df_recommandations = pd.DataFrame(recommandations).reset_index(drop=True)
+        
+
+        # Création de n colonnes 
+        nb_colonne = 4
+        cols = st.columns(nb_colonne)
+        for film in range(nb_colonne):
+            with cols[film]:
+                url = f'https://image.tmdb.org/t/p/w500/{df_recommandations.loc[film,"poster_path"]}'
+                st.image(url)
+                st.write(df_recommandations.loc[film, "originalTitle_year"])
+                st.write(f"{df_recommandations.loc[film, 'averageRating']} /10 : ⭐")
+                st.write(f"Réalisateur : {df_recommandations.loc[film, "director"]}")
+
+        # st.dataframe(df_recommandations)
+
+        # url = f'https://image.tmdb.org/t/p/w500/{df_recommandations.loc[0,"poster_path"]}'
+        # st.image(url, width = 200)
+        # st.write(df_recommandations.loc[0, "originalTitle_year"])
+        # st.write(f"{df_recommandations.loc[0, 'averageRating']} /10 : ⭐")
 
         # Feedback
         st.write('___')
@@ -131,7 +155,8 @@ if recherche:
         st.write('___')
 
         # Liens utiles
-        st.button('FAQ')
-        st.button("Conditions d'utilisation")
-        st.button('Mention légale')
-        st.button('Nous contacter')
+        st.link_button('FAQ', url="https://www.wildcodeschool.com/contact")
+        st.link_button("Conditions d'utilisation", url="https://www.cnil.fr/fr/reglement-europeen-protection-donnees")
+        st.link_button('Mentions légales', url="https://www.police-nationale.interieur.gouv.fr/")
+        st.link_button('Nous contacter', url="https://www.linkedin.com/in/julie-oriol-3741ab171/")
+        st.link_button('Recrutement', url="https://www.linkedin.com/in/vivien-schneider-007a7462/")
