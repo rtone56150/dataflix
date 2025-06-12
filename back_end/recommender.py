@@ -2,16 +2,14 @@ import pandas as pd
 import unidecode
 import re
 from sklearn.neighbors import NearestNeighbors
-# Import outil standardisation de la donnée
 from sklearn.preprocessing import StandardScaler
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 
-# Import le dataframe en CSV
+# Import du dataframe en CSV
 df_nlp = pd.read_csv("df_nlp.csv")
-
 
 # Fonction de normalisation
 def normalize(text):
@@ -22,21 +20,13 @@ def normalize(text):
     text = text.strip()
     return text
 
-
 # Fonction listes des films possibles
-
-
-def liste_films_possibles(film_recherche: str):
-    film_recherche_normalise = normalize(film_recherche)
-    df_nlp["originalTitle_normalise"] = df_nlp["originalTitle"].apply(normalize)
-    df_film_possible = df_nlp[df_nlp["originalTitle_normalise"].apply(lambda x: set(film_recherche_normalise).issubset(set(x)))]
-    return df_film_possible["originalTitle"].to_list()
-
-
 def liste_films_possibles_knarf(film_recherche: str):
     film_recherche_normalise = normalize(film_recherche)
     df_nlp["originalTitle_normalise"] = df_nlp["originalTitle"].apply(normalize)
+    # Pour la ligne suivante : # Insensible à la casse # Les NaN sont considérés comme faux
     df_film_possible = df_nlp[df_nlp['originalTitle_normalise'].str.contains(film_recherche_normalise, case=False, na=False)]
+    # On rempli les NaN éventuels par "inconnu"
     df_film_possible = df_film_possible.fillna(value="Inconnu")
     return df_film_possible[[
         "originalTitle",
@@ -48,9 +38,10 @@ def liste_films_possibles_knarf(film_recherche: str):
         "numVotes",
         "popularity",
         "overview",
-        "poster_path"
+        "poster_path", 
+        "actor/actress",
+        "director"
         ]].sort_values("numVotes", ascending=False).to_dict()
-
 
 # Définition des features
 #X = df_nlp(columns=["Unnamed: 0", "index", "tconst", "originalTitle", "genres", "numVotes", "nconst", "director", "actor/actress", "poster_path", "overview", "originalTitle_year", "tagline", "texte_nlp_cleaned"])
@@ -67,8 +58,6 @@ def liste_films_possibles_knarf(film_recherche: str):
 #nn_model.fit(X_scaled)  # Entraîner sur les données standardisées X_class
 
 # Fonction recommandation
-
-
 def find_neighbors_by_title(movie_title: str):
 
     # Récupérer l'ID du film à partir du titre
@@ -106,10 +95,11 @@ def find_neighbors_by_title(movie_title: str):
     ]].to_dict()
 
 
+# Définition du X (correspond à la colonne préparée pour le NLP)
 X_nlp = df_nlp["texte_nlp_cleaned"]
-
-model_vectorizer = TfidfVectorizer()
-
+# Modèle de vectorisation
+model_vectorizer = CountVectorizer()
+# Transformation du X en matrice de features
 X_nlp_CV = model_vectorizer.fit_transform(X_nlp)
 
 
@@ -118,17 +108,18 @@ def find_neighbors_nlp(movie_tconst:str):
     movie_id = df_nlp[df_nlp["tconst"] == movie_tconst].index.to_list()[0]
 
     # Récupérer les features du film cible
-    movie_features = X_nlp_CV[movie_id]  # Garder le format DataFrame
+    movie_features = X_nlp_CV[movie_id]
 
-    # Trouver les k voisins (incluant potentiellement lui-même en premier)
+    # Trouver les k voisins (incluant lui-même en premier)
     cosine_sim_scores = cosine_similarity(movie_features, X_nlp_CV)
 
-    # On classe pour récupérer les indices triés par similarité décroissante
-    neighbor_original_indices = np.argsort(cosine_sim_scores[0])[::-1][1:12]
+    # Récupérer les indices triés par similarité décroissante
+    neighbor_original_indices = np.argsort(cosine_sim_scores[0])[::-1][1:15]
 
     # Utiliser .loc avec la liste des index originaux des voisins
     neighbor_info = df_nlp.loc[neighbor_original_indices]
 
+    # On rempli les NaN éventuels par "inconnu"
     neighbor_info = neighbor_info.fillna(value="Inconnu")
 
     return neighbor_info[[
@@ -142,5 +133,7 @@ def find_neighbors_nlp(movie_tconst:str):
         "numVotes",
         "popularity",
         "poster_path",
-        "originalTitle_year"
+        "originalTitle_year",
+        "actor/actress",
+        "director"
     ]].sort_values("numVotes", ascending=False).to_dict()

@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-from back_end.recommender import liste_films_possibles
 from back_end.recommender import liste_films_possibles_knarf
 from back_end.recommender import find_neighbors_by_title
 from back_end.recommender import find_neighbors_nlp
@@ -9,12 +8,13 @@ from back_end.recommender import find_neighbors_nlp
 
 app = FastAPI()
 
-
+# Fonction pour la recherche du film
 @app.get("/search")
 def suggest(name: str):
     return liste_films_possibles_knarf(name)
 
 
+# Fonction pour la recommandation des films
 @app.get("/recommend")
 def recommend(tconst: str):
     return find_neighbors_nlp(tconst)

@@ -4,6 +4,8 @@ import pandas as pd
 
 # streamlit run front_end/app.py
 
+st.set_page_config(layout="wide", initial_sidebar_state="expanded")
+
 # Background - NE PAS OUBLIER DE METTRE L'IMAGE DU BACKGROUND DANS LE MEME DOSSIER
 import base64
 with open("Background.jpg", "rb") as img_file:    # J'ai appelé l'image Background sur mon pc (Transparence de 3 sur Canva)
@@ -86,21 +88,23 @@ input::placeholder {
 url_search = "http://127.0.0.1:8000/search"
 url_recommend = "http://127.0.0.1:8000/recommend"
 
-st.title("Dataflix")
+st.sidebar.title("Dataflix")
+# st.title("Dataflix")
 st.subheader("Recommandation de films")
-# st.subheader("Recherche de films")
 
-# Champ de texte pour entrer un titre de film
+# Champ pour entrer un titre de film
 recherche = st.text_input(" ", placeholder="Recherchez votre film")
 
 if recherche:
-    # st.write("Vous recherchez :", recherche)
-    response = requests.get(f"{url_search}?name={recherche}")
+    # Requete API pour récupérer le résultat des films possibles
+    response = requests.get(f"http://127.0.0.1:8000/search?name={recherche}")
+    # On récupère la réponse dans un json puis transformation en DF
     suggestions = response.json()
     df_films_possibles = pd.DataFrame(suggestions)
     liste_films_possibles_avec_annee = df_films_possibles["originalTitle_year"]
     # st.dataframe(df_films_possibles)
 
+    # On laisse l'utilisateur choisir le film dans la liste des films possibles
     choix_film_avec_annee = st.selectbox(
         "Selectionnez votre film :",
         liste_films_possibles_avec_annee,
@@ -110,43 +114,48 @@ if recherche:
     
 
     if choix_film_avec_annee:
-
+        # On récupère le nom du film (on avait choisit le film avec l'année)
         choix = df_films_possibles[df_films_possibles["originalTitle_year"] == choix_film_avec_annee]["originalTitle"].values[0]
 
+        # Affichage des infos du film choisi
         with st.sidebar:
             url = f"https://image.tmdb.org/t/p/w500/{df_films_possibles[df_films_possibles['originalTitle'] == choix]["poster_path"].values[0]}"
             st.subheader(f"Vous avez choisi : {choix}")
             st.image(url, width=200)
-            genre = df_films_possibles[df_films_possibles['originalTitle'].str.contains(recherche, case=False, na=False)]['genres'].values[0].replace(",", " ")
-            st.write(f"Genre(s) : {genre}")
+            genre = df_films_possibles[df_films_possibles['originalTitle'].str.contains(recherche, case=False, na=False)]['genres'].values[0].replace(",", ", ")
+            st.write(f"**Genre(s)** : {genre}")
+            director = df_films_possibles[df_films_possibles["originalTitle_year"] == choix_film_avec_annee]["director"].values[0]
+            st.write(f"**Réalisateur** : {director}")
+            acteurs = df_films_possibles[df_films_possibles["originalTitle_year"] == choix_film_avec_annee]["actor/actress"].values[0]
+            st.write(f"**Acteurs/Actrices** : {acteurs}")
             synopsis = df_films_possibles[df_films_possibles["originalTitle_year"] == choix_film_avec_annee]["overview"].values[0]
-            st.write(f"Synopsis : {synopsis}")
+            st.write(f"**Synopsis** : {synopsis}")
 
+        # On envoie dans l'API le tconst (les caractères spéciaux posaient problème)
         choix_tconst = df_films_possibles[df_films_possibles["originalTitle_year"] == choix_film_avec_annee]["tconst"].values[0]
 
-        st.write("Vous pourriez aimer :")
-        response_2 = requests.get(f"{url_recommend}?tconst={choix_tconst}")
+        # Requete API pour récupérer le résultat des recommandations de films
+        st.write("**Vous pourriez aimer :**")
+        response_2 = requests.get(f"http://127.0.0.1:8000/recommend?tconst={choix_tconst}")
+        # On récupère la réponse dans un json puis transformation en DF
         recommandations = response_2.json()
         df_recommandations = pd.DataFrame(recommandations).reset_index(drop=True)
         
 
         # Création de n colonnes 
-        nb_colonne = 4
+        nb_colonne = 5
         cols = st.columns(nb_colonne)
         for film in range(nb_colonne):
             with cols[film]:
                 url = f'https://image.tmdb.org/t/p/w500/{df_recommandations.loc[film,"poster_path"]}'
                 st.image(url)
                 st.write(df_recommandations.loc[film, "originalTitle_year"])
-                st.write(f"{df_recommandations.loc[film, 'averageRating']} /10 : ⭐")
-                st.write(f"Réalisateur : {df_recommandations.loc[film, "director"]}")
+                st.write(f"⭐ {df_recommandations.loc[film, 'averageRating']} / 10")
+                st.write(f"**Réalisateur** : {df_recommandations.loc[film, "director"]}")
+                st.write(f"**Acteurs/Actrices** : {df_recommandations.loc[film, "actor/actress"]}")
+                st.write(f"**Genre(s)** : {df_recommandations.loc[film, "genres"].replace(",", ", ")}")
 
         # st.dataframe(df_recommandations)
-
-        # url = f'https://image.tmdb.org/t/p/w500/{df_recommandations.loc[0,"poster_path"]}'
-        # st.image(url, width = 200)
-        # st.write(df_recommandations.loc[0, "originalTitle_year"])
-        # st.write(f"{df_recommandations.loc[0, 'averageRating']} /10 : ⭐")
 
         # Feedback
         st.write('___')
