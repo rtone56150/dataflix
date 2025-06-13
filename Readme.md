@@ -1,5 +1,3 @@
----------------------movies_reco---------------------------
-
 Table des matières:
 
 1. Installation
