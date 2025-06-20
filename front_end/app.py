@@ -119,7 +119,7 @@ if recherche:
 
         # Affichage des infos du film choisi
         with st.sidebar:
-            url = f"https://image.tmdb.org/t/p/w500/{df_films_possibles[df_films_possibles['originalTitle'] == choix]["poster_path"].values[0]}"
+            url = f"https://image.tmdb.org/t/p/w500/{df_films_possibles[df_films_possibles['originalTitle'] == choix]['poster_path'].values[0]}"
             st.subheader(f"Vous avez choisi : {choix}")
             st.image(url, width=200)
             genre = df_films_possibles[df_films_possibles['originalTitle'].str.contains(recherche, case=False, na=False)]['genres'].values[0].replace(",", ", ")
@@ -151,9 +151,9 @@ if recherche:
                 st.image(url)
                 st.write(df_recommandations.loc[film, "originalTitle_year"])
                 st.write(f"⭐ {df_recommandations.loc[film, 'averageRating']} / 10")
-                st.write(f"**Genre(s)** : {df_recommandations.loc[film, "genres"].replace(",", ", ")}")
-                st.write(f"**Réalisateur** : {df_recommandations.loc[film, "director"]}")
-                st.write(f"**Acteurs/Actrices** : {df_recommandations.loc[film, "actor/actress"]}")
+                st.write(f"**Genre(s)** : {df_recommandations.loc[film, 'genres'].replace(',', ', ')}")
+                st.write(f"**Réalisateur** : {df_recommandations.loc[film, 'director']}")
+                st.write(f"**Acteurs/Actrices** : {df_recommandations.loc[film, 'actor/actress']}")
 
         # st.dataframe(df_recommandations)
 
