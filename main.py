@@ -5,6 +5,7 @@ from back_end.recommender import find_neighbors_nlp
 
 
 # Pour lancer : fastapi dev main.py
+# Pour déploiement sur Render : uvicorn main:app --host 0.0.0.0 --port $PORT
 
 app = FastAPI()
 

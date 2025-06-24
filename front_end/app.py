@@ -85,8 +85,8 @@ input::placeholder {
 </style>
 """, unsafe_allow_html=True)
 
-url_search = "http://127.0.0.1:8000/search"
-url_recommend = "http://127.0.0.1:8000/recommend"
+# url_search = "http://127.0.0.1:8000/search"
+# url_recommend = "http://127.0.0.1:8000/recommend"
 
 st.sidebar.title("Dataflix")
 # st.title("Dataflix")
@@ -97,7 +97,7 @@ recherche = st.text_input(" ", placeholder="Recherchez votre film")
 
 if recherche:
     # Requete API pour récupérer le résultat des films possibles
-    response = requests.get(f"http://127.0.0.1:8000/search?name={recherche}")
+    response = requests.get(f"https://dataflix.onrender.com/search?name={recherche}")
     # On récupère la réponse dans un json puis transformation en DF
     suggestions = response.json()
     df_films_possibles = pd.DataFrame(suggestions)
@@ -136,7 +136,7 @@ if recherche:
 
         # Requete API pour récupérer le résultat des recommandations de films
         st.write("**Vous pourriez aimer :**")
-        response_2 = requests.get(f"http://127.0.0.1:8000/recommend?tconst={choix_tconst}")
+        response_2 = requests.get(f"https://dataflix.onrender.com/recommend?tconst={choix_tconst}")
         # On récupère la réponse dans un json puis transformation en DF
         recommandations = response_2.json()
         df_recommandations = pd.DataFrame(recommandations).reset_index(drop=True)
