@@ -3,6 +3,7 @@ import requests
 import pandas as pd
 
 # streamlit run front_end/app.py
+# Pour le déploiement sur Render : streamlit run front_end/app.py --server.port $PORT --server.address 0.0.0.0
 
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")
 
